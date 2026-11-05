@@ -36,3 +36,70 @@ activity_avg <- dbplyr_resp |>
   summarise(mean_weekday_minutes = mean(minutes, na.rm = TRUE)) |>
   collect()
 ```
+
+```{r}
+activity_avg |>
+  filter(major_name != "Data Codes") |>
+  ggplot(aes(
+    x = fct_reorder(major_name, mean_weekday_minutes, .fun = mean),
+    y = mean_weekday_minutes,
+    fill = sex
+  )) +
+  geom_col(position = "dodge") +
+  coord_flip() +
+  labs(
+    title = "Average Weekday Minutes by Activity",
+    subtitle = "Respondents not in the labor force, by sex",
+    x = "Major activity category",
+    y = "Average minutes per day",
+    fill = "Sex",
+    caption = "Source: American Time Use Survey (ATUS)"
+  )
+```
+
+```{r}
+major_categories <- c(
+  "Eating and Drinking",
+  "Personal Care Activities",
+  "Socializing, Relaxing, and Leisure",
+  "Household Activities"
+)
+
+respondent_counts <- dbplyr_resp |>
+  filter(day_type == "Weekday", employment_status == "Not in labor force") |>
+  distinct(tucaseid, sex) |>
+  count(sex, name = "n_respondents") |>
+  collect()
+
+hourly_totals <- dbplyr_resp |>
+  filter(day_type == "Weekday", employment_status == "Not in labor force") |>
+  inner_join(dbplyr_act, by = "tucaseid") |>
+  inner_join(
+    dbplyr_codes |> select(activity_code, major_name),
+    by = "activity_code"
+  ) |>
+  filter(
+    major_name %in% major_categories,
+    start_hhmm >= 600,
+    start_hhmm < 2400
+  ) |>
+  mutate(hour = floor(start_hhmm / 100)) |>
+  group_by(sex, major_name, hour) |>
+  summarise(total_minutes = sum(duration_min, na.rm = TRUE)) |>
+  collect()
+
+hourly_avg <- crossing(
+  sex = respondent_counts$sex,
+  major_name = major_categories,
+  hour = 6:23
+) |>
+  left_join(hourly_totals, by = c("sex", "major_name", "hour")) |>
+  left_join(respondent_counts, by = "sex") |>
+  mutate(
+    mean_minutes = coalesce(total_minutes, 0) / n_respondents
+  ) |>
+  select(sex, major_name, hour, mean_minutes) |>
+  arrange(sex, major_name, hour)
+
+print(hourly_avg)
+```
