@@ -76,7 +76,28 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-
+<div class="cell">
+<div class="cell-output cell-output-stderr">
+<pre><code>duckdb keeps downloaded extensions and secrets in a temporary directory:
+ℹ /tmp/RtmpOtzBOh/duckdb
+This is removed when the R session ends.
+• Extensions are re-downloaded each session.
+• Secrets are lost.
+ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
+ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
+ℹ See ?duckdb_storage for details and alternatives.</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output cell-output-stderr">
+<pre><code>! Grouped output by "sex" and "tucaseid".
+ℹ Override behaviour and silence this message with the `.groups` argument.
+ℹ Or use `.by` instead of `group_by()`.
+! Grouped output by "sex".
+ℹ Override behaviour and silence this message with the `.groups` argument.
+ℹ Or use `.by` instead of `group_by()`.</code></pre>
+</div>
+</div>
 
 </main>
 <!-- /main column -->

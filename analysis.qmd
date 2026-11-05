@@ -12,3 +12,27 @@ library(DBI)
 library(duckdb)
 library(dbplyr)
 ```
+
+```{r}
+con <- dbConnect(duckdb(), dbdir = "data/atus.duckdb", read_only = TRUE)
+
+dbplyr_act <- tbl(con, "activities")
+dbplyr_resp <- tbl(con, "respondents")
+dbplyr_codes <- tbl(con, "activity_codes")
+```
+
+```{r}
+#| cache: true
+activity_avg <- dbplyr_resp |>
+  filter(day_type == "Weekday", employment_status == "Not in labor force") |>
+  inner_join(dbplyr_act, by = "tucaseid") |>
+  inner_join(
+    dbplyr_codes |> select(activity_code, major_name),
+    by = "activity_code"
+  ) |>
+  group_by(sex, tucaseid, major_name) |>
+  summarise(minutes = sum(duration_min, na.rm = TRUE)) |>
+  group_by(sex, major_name) |>
+  summarise(mean_weekday_minutes = mean(minutes, na.rm = TRUE)) |>
+  collect()
+```
